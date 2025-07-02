@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import GUI from 'lil-gui';
-import CANNON from 'cannon';
+// import CANNON from 'cannon';
+import * as CANNON from 'cannon-es';
 
 /**
  * Debug
@@ -34,6 +35,18 @@ debugObject.createBox = () => {
 };
 gui.add(debugObject, 'createBox').name('Create Box');
 
+debugObject.reset = () => {
+  for (const object of objectsToUpdate) {
+    object.body.removeEventListener('collide', playHitSound);
+    world.removeBody(object.body);
+
+    scene.remove(object.mesh);
+  }
+
+  objectsToUpdate.splice(0, objectsToUpdate.length);
+};
+gui.add(debugObject, 'reset').name('Reset Scene');
+
 /**
  * Base
  */
@@ -42,6 +55,19 @@ const canvas = document.querySelector('canvas.webgl');
 
 // Scene
 const scene = new THREE.Scene();
+
+//Sound
+const hitSound = new Audio('/sounds/hit.mp3');
+
+const playHitSound = (collision) => {
+  const impactStrength = collision.contact.getImpactVelocityAlongNormal();
+
+  if (impactStrength > 1.5) {
+    hitSound.volume = Math.random();
+    hitSound.currentTime = 0;
+    hitSound.play();
+  }
+};
 
 /**
  * Textures
@@ -64,6 +90,8 @@ const environmentMapTexture = cubeTextureLoader.load([
 
 //World
 const world = new CANNON.World();
+world.broadphase = new CANNON.SAPBroadphase(world);
+world.allowSleep = true; // Allow bodies to sleep when not moving
 world.gravity.set(0, -9.82, 0); // m/s²
 
 //Material
@@ -148,10 +176,10 @@ scene.add(floor);
 /**
  * Lights
  */
-const ambientLight = new THREE.AmbientLight(0xffffff, 2.1);
+const ambientLight = new THREE.AmbientLight(0xfff0ff, 1);
 scene.add(ambientLight);
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 0.9);
 directionalLight.castShadow = true;
 directionalLight.shadow.mapSize.set(1024, 1024);
 directionalLight.shadow.camera.far = 15;
@@ -242,6 +270,7 @@ const createSphere = (radius, position) => {
     material: defaultMaterial,
   });
   body.position.copy(position);
+  body.addEventListener('collide', playHitSound); // Play sound on collision
   world.addBody(body);
 
   //Save in objectsToUpdate
@@ -279,6 +308,7 @@ const createBox = (width, height, depth, position) => {
     material: defaultMaterial,
   });
   body.position.copy(position);
+  body.addEventListener('collide', playHitSound); // Play sound on collision
   world.addBody(body);
 
   //Save in objectsToUpdate
