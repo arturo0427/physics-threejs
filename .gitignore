@@ -1,0 +1,32 @@
+# Archivos y directorios que se ignoran
+
+# Archivos de configuración
+*.config
+*.settings
+
+# Archivos de compilación y ejecución
+*.exe
+*.o
+*.obj
+*.dll
+*.so
+
+# Archivos de depuración
+*.pdb
+*.dbg
+
+# Archivos de logs
+*.log
+*.txt
+
+# Directorios de node_modules y bower_components
+node_modules/
+bower_components/
+
+# Archivos de sistema operativo
+.DS_Store
+Thumbs.db
+
+# Archivos de IDE
+.idea/
+.vscode/
